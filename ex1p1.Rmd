@@ -1,10 +1,6 @@
 ---
 title: "Invest for Green Buildings"
-author: "Hyunpyo Kim"
-date: "Feb 11, 2019"
-output:
-  md_document: 
-    variant: markdown_github
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
