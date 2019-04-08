@@ -97,7 +97,7 @@ The result shows that the final model is
 summary(lm_st)
 ```
 
-The AIC of the initial model is `r min(AICc(gblasso))` , and the final model's AIC is 34,510.
+The AIC of the initial model is 35,182, and the final model's AIC decreases to 34,510.
 
 ## The change in rental income associated with green certification
 
