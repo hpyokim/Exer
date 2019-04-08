@@ -1,0 +1,45 @@
+---
+title: "What causes what?(P#2)"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Answers
+
+### 1. Why the regression of "Crime" on "Police" can not show the effect of cops on the crime rate?
+
+The city with high crime rate tends to hire more policemen than other cities. Then, the result of the regression can show that the more policemen, the higher crime rate.
+
+We call this is an endogeneity, which is that an explanatory variable is corrrelated with the error term. The source of endogeneity in this problem is simultaneity, because the number policemen can explain the crime rate, and the crime rate can explain the number of policemen.
+
+
+### 2. How the researchers isolate this effect?
+
+The method of instrumental variables is used to solve this problem. We can isolate the simultaneity by using the variables which are related to the number of policemen, and are not related to the crime rate. These are the instrumental variables.
+
+In this problem, the researchers use the terrorism alert system in Washington, D. C. as an insturumental variable. When the terror alert level goes high, more policemen are dispatched, but the terror alert is not related to the ordinary crime rate. So, the researchers can find the effect of the addtional policemen by the terrorsim alert system, not by the high crime rate, on the crime.
+
+The first column of table 2 shows the effect of police on crime by using "High Alert" dummy variable, it says that additional policemen decrease the crime rate by 7.3. The p-value of the coeffiect shows it is a significant at the 5% level.
+
+### 3. Why they control for Metro ridership?
+
+Though the terror alert can remove the crime rate effect from the additional policemen, the terror alert can make the number of people who are targets of crimes decrease, and the decreased targets can decrease crime rate.
+Then, it is not only additional policemen to lower the crime rate, but also the decreased people who are potential victims.
+
+The researchers control the number of victims by using the metro ridership.
+
+The second column of table 2 shows the effect of police and victim on crime. Then, the effect of additinal policemen on the lower crime is 6, less than the number 2. This is because the fewer victims also can explain the fewer crimes.
+The p-value of the coeffiect of High Alert shows it is  significant at the 5% level, and the p-value of the coefficient of midday ridership shows it is significant at the 1% level.
+
+### 4. Describe the model with "district" interactions
+
+Washington, D.C. consists of sevral districts.Table 4 shows the interaction variables between high alert and districts. 
+
+Most govenment buildings including the White House and the U.S. Congress, are located in district 1. Thus, most part of the additional police by high terror alert will be dispatched to district 1.
+
+The interaction between high alert and district 1 can show the more sophisticated effect of police on crimes.
+As we can see from table 4, the additional police when high alert is related to the 2.6 less crimes in district 1. The p-value shows it is significant at the 1% level.
+The additional police is also related to the 0.57 less crimes in other districts, but it is not significant.
