@@ -1,0 +1,111 @@
+---
+title: "Green Building(P#1)"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+I build a predictive model of the rent by using greenbuilding data.
+The data contains information of 7,894 rental properties including rent per square foot, green rating related information, and other features.
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(mosaic)
+library(tidyverse)
+library(gamlr) 
+```
+```{r}
+gbldg = read.csv("../data/greenbuildings.csv")
+nrow(gbldg)
+```
+
+### The data cleansing
+
+There are some missing data in the data set. Missing data can make an error to build a model, so delete the data rows which have missing data.
+
+```{r}
+length(which(complete.cases(gbldg)=="FALSE")) 
+gbldg[which(complete.cases(gbldg)=="FALSE"),"empl_gr"]
+gbldg = na.omit(gbldg)
+nrow(gbldg)
+```
+
+As we can see, 74 rows have omitted values in 'empl_gr' variable. After delete the data, there are 7820 rental properties' information.
+
+### Other features of data
+
+The green rating variable is an indicator for LEED or EnergyStar certificate. However, there are only `r length(which(gbldg$LEED==1)) ` LEED certificates, while `r length(which(gbldg$Energystar==1)) ` Energy Star certificates. So, I will collapse LEED and EnergyStar into a single "green certified".
+
+The data in the same cluster have the same features ; 
+> which are empl_gr, cd_total_07, hd_total07, total_dd_07, Precipitation, Gas_Costs, Electricity_Costs, cluster_rent 
+
+Because these variables are the features of the clustered area.
+
+## Build a predictive model
+
+I build a model by using stepwise selection. 
+First, I make an initial model for proceeding a stepwise selection.
+Lasso regreesion can make me save the time to build a model, I apply a lasso regression. Then I will step forward to the model with interaction variables.
+
++ There was an error to build second order sparse matrices for the Lasso regression with interaction variables. Thus, I build a Lasso model without interaction, then build a predictive model by stepwise selection from the Lasso model.
+
+### LASSO regreesion for initial model
+
+First, I make a sparse matrix without CS_PropertyID, cluster, LEED and Energystar variables, because CS_PropertyID and cluster variables are a kind of name, the numerical size of the data have no meaning, and I use green rating vairable instead of LEED and Energystar.
+
+```{r}
+gb_x = sparse.model.matrix(Rent ~ .-CS_PropertyID - cluster - 
+      LEED - Energystar, data = gbldg)[,-1]
+gb_y = gbldg$Rent
+```
+
+The lasso regression result shows that the model is consists of 15 variables including size, green_rating, renovated and so on.
+
+```{r}
+gblasso = gamlr(gb_x, gb_y)
+coef(gblasso)
+```
+
+### Stepwise selection
+
+My initial model is
+
+```{r}
+lm0 = lm(Rent ~ size + empl_gr + leasing_rate + age +
+           renovated + class_a + class_b +
+           green_rating + net + amenities + 
+           cd_total_07 + hd_total07 +
+           Gas_Costs + Electricity_Costs + 
+           cluster_rent, data = gbldg)
+```
+
+Then, I use step function to step forward from my initial model to the model with interaction variables.
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, results = "hide"}
+lm_st = step(lm0, scope = ~ (size + empl_gr + leasing_rate + stories + age + 
+                             renovated + class_a + class_b + green_rating + net + amenities +
+                             cd_total_07 + hd_total07 + total_dd_07 + Precipitation + 
+                             Gas_Costs + Electricity_Costs + cluster_rent)^2)
+
+```
+
+The result shows that the final model is 
+```{r}
+summary(lm_st)
+```
+
+The AIC of the initial model is `r min(AICc(gblasso))` , and the final model's AIC is 34,510.
+
+## The change in rental income associated with green certification
+
+The coefficient of green_rating is 2.429, and this variable is statistically significant at 1% level. 
+The coefficient shows that green certification is associated with 2.429 additional dollars per square foot per year, holding all else fixed.
+
+## The relationship of the effect of green certification and others
+
+The model shows that there are interaction variables between green_rating variable and amenities variable. This means that the green certification with amenities near the building is associated with 0.1( = 2.429 -2.3) additional dollars per square foot per year, holding all else fixed.
+
+
