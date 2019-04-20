@@ -1,0 +1,47 @@
+---
+title: "ECO 395 Project Prospectus: (Hyunpyo Kim, Milo Opdahl)"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Our final project topic is to make stock-trading strategies.
+
+People who invest stock markets try to find trends or patterns of stock price changes. So, there are lots of strategies to invest in the stock market.
+Some are to find trends in a stock and think the momentum will continue, and decide to invest the stock. Others are to find patterns in stock price changes. 
+
+We will set the trading our own strategies, and build models with regression or clustering analysis, then verify them.
+
+## Target data
+
+We will use the stock of companies included in the S&P 500 index.
+
+The stock price history can be downloaded at "https://stooq.com/", but we have to download the data manually.
+
+In addition, we can find other data such as valuation data, financials data at "https://www.tradingview.com/symbols/SPX/components/".
+However, we can not download the data, need to find different data sources which can be downloaded.
+
+Moreover, we will use macroeconomic indicators data, too.
+
+## Methodologies
+
+Those are ideas what we will conduct. 
+After we build models, then simulate trading with the models, and check the result.
+
+### Regression
+
+Suppose that daily stock price changes are independent observations and there are some features to explain the changes.
+
+We use price histories(1 day change, 1 month change, and so on), sector or industy index, macroeconomic indicators, financial data, and other relate features as x variables to estimate daily price changes. Then, try quantitative analysis and qualitative analysis(+/-) to find the best model.
+
+### Clustering 
+
+Suppose that some stocks tend to move together eventually. 
+And we try to cluster stocks according to their price changes. 
+If we can find significant stock clusters, those clusters are our trading models.
+
+If some stocks' price changes are deviated from those cluster's change, then then buy or sell the stocks. 
