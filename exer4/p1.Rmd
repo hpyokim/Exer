@@ -1,0 +1,148 @@
+---
+title: "Wine Tasting(P#1)"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This is a prediction of type of wines, which are predicted by 11 chemical properties.
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(ggplot2) 
+library(LICORS)
+library(foreach)
+library(mosaic)
+library(factoextra)
+library(cluster)
+
+wine = read.csv("../data/wine.csv")
+```
+
+The data is the information on 11 chemical properties of `r nrow(wine)` diffrenct bottles of wine, and showing that whether it is red or white, and the quality of wines.
+
+First, I find the **principal components**, next run **kmeans++ clustering**.
+
+Before I start, modify data to run PCA and a clustering algorithm.  Split the chemical properties, and **scale** them. Moreover, make classification data sets, which are white or red and the quality of wines. 
+
+```{r}
+X = wine[,-(12:13)]
+X = scale(X, center =TRUE, scale = TRUE) ### center and scale the data
+
+wine_RW = wine[,13]
+wine_LV = wine[,12]
+```
+
+
+## Classification by PCA
+
+I performed PCA on the scaled data set.  
+The result shows that the first 2 components can explain 50% of total variance.  
+The cumulative proportion of variance shows that PC1 ~ PC5 explains almost 80% of the variance in the data.  
+
+```{r}
+pcX = prcomp(X)
+summary(pcX)
+```
+
+I plot the data and loading vectors for the first 2 components, and check the loading vectors.  
+As we can see, PC1 explains positive "free.sulfur.dioxide", "total.sulfur.dioxide", and negative "volatile.acidity", "sulphates". PC2 explains positive "density", and negative "alcohol". 
+
+```{r}
+fviz_pca_biplot(pcX, geom.ind = "point")
+pcX$rotation[,1:2]
+```
+
+The graph with PC1 and PC2 seems to have two clusters. So, I draw a scatterplot of PC1 and PC2's scores by colors of wine.  
+
+```{r message=FALSE, warning=FALSE}
+scores = pcX$x
+qplot(scores[,1], scores[,2], color = wine_RW, xlab='PC1', ylab='PC2',
+      xlim=c(-7.5,7.5), ylim=c(-7.5,7.5))
+```
+
+As we can see, the first 2 components distinguish the reds from the whites mostly by PC1.  
+Suppose that the reds and the white are divided by the line "PC2 - 2 * PC1 = 2",  
+then we can see `r round((1550+4824)/6497*100, 2)` % is correct.
+
+```{r}
+RW = ifelse(scores[,1] < -1, "red", "white")
+table(RW, wine_RW)
+```
+
+Next, I try to distinguish the quality of wines by using PCA result.
+The quality of wines is judged on a 1-10 scale, but there are 7 types(3 to 9) of wines in this data set.
+```{r}
+summary(factor(wine_LV))
+```
+
+I draw a scatterplot of PC1 and PC2's scores by qualites of wine.  
+It is too complicated to distinguish by colors, so I use facet grid.
+However, unfortunately I can not find any clues to distinguish the quality of wines on the graph.  
+I try PC3 and PC4 coordinates, no clue at all, neither.
+
+```{r message=FALSE, warning=FALSE}
+qplot(scores[,1], scores[,2], color = wine_LV, xlab='PC1', ylab='PC2',
+      xlim=c(-7.5,7.5), ylim=c(-7.5,7.5))
+qplot(scores[,1], scores[,2], facets = ~ wine_LV, xlab='PC1', ylab='PC2',
+      xlim=c(-7.5,7.5), ylim=c(-7.5,7.5))
+qplot(scores[,3], scores[,4], facets = ~ wine_LV, xlab='PC3', ylab='PC4',
+      xlim=c(-7.5,7.5), ylim=c(-7.5,7.5))
+```
+
+## Classification by clustering
+
+I use Kmeans++ to distinguish wines, because we already know how many clusters are there.  
+For the color of wines, I divide the data set into 2 groups, while, for the qualities of wines, divide into 7 groups.
+
+```{r}
+clstRW2 = kmeanspp(X, k=2, nstart=25)
+clstLV2 = kmeanspp(X, k=7, nstart=25)
+summary(factor(clstRW2$cluster))
+summary(factor(clstLV2$cluster))
+```
+
+Plot the data with the coordinate system whose x-axis is "total.sulfur.dioxide" and y-axis is "sulphates".  
+This is because the biplot of PCA showed that both two axis explained the difference of the two groups.  
+The group 1 might be the red wines, and the group 2 might be the white wines.
+
+```{r message=FALSE, warning=FALSE}
+qplot(total.sulfur.dioxide, sulphates, data=data.frame(X), color=factor(clstRW2$cluster))
+```
+
+When I use a fviz_cluster function to show the plot with principle components coordinates, which looks better to distinguish the two groups.
+
+```{r}
+fviz_cluster(clstRW2, data = X, ellipse.type = "convex", palette="jco", 
+             ggtheme = theme_minimal())
+
+```
+
+we can see `r round((1575+4830)/6497*100, 2)`% is correct to distinguish the color of wines.
+
+```{r}
+table(clstRW2$cluster, wine$color)
+```
+
+However, the clustering does not work for the quality of wines. The graph divided by 7 clusters doesn't clearly distinguish the groups.
+
+```{r}
+fviz_cluster(clstLV2, data = X, 
+             ellipse.type = "convex", palette="jco", ggtheme = theme_minimal())
+table(clstLV2$cluster, wine$quality)
+```
+
+## The reason why we can not distinguish qualities
+
+I think that there might be two reasons.  
+First, the quality of wines might be unrelated with 11 chemical properties.  
+Second, the target wines are mostly level 5 to 7. This uneven distributed data makes clustering difficult, even thouth there might be a relationship.
+
+```{r}
+summary(factor(wine_LV))
+```
+
+
