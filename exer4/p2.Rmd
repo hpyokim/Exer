@@ -50,7 +50,7 @@ I use gap-stat valuses to find the best K. The graph shows that 6 clusters might
 > fviz_nbclust(tweet_Z, kmeans, iter = 25, method="gap_stat") 
 
 
-```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
+```{r pressure}
 knitr::include_graphics("rplot.jpeg")
 ```
 
