@@ -1,0 +1,74 @@
+---
+title: "Grocery purchases(P#3)"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(igraph) 
+library(arules) 
+library(arulesViz)
+```
+
+This is an association rule mining with groceries data.  
+The data is a list of shopping basket, which is divided by "," and "enter".  
+So, I split items in one's shopping basket for an association rule mining.
+
+```{r}
+groc_raw = readLines("../data/groceries.txt")
+head(groc_raw, 3)
+# transform for an association rule mining
+groc = lapply(groc_raw,strsplit,split=",") # split by ','
+groc = lapply(groc, unique) # delete repeated values
+groc = lapply(groc, unlist) # list to vector
+head(groc, 3)
+```
+
+## Association rule mining
+
+Now, I run an association rule analysis by using 'arules' package.  
+First, I make a transaction table, and see what are the most frequent items.
+
+```{r}
+# transaction table
+groctrans = as(groc, "transactions") 
+itemFrequencyPlot(groctrans, topN=20)
+```
+
+Next, make association rules, with minimum support 0.01, and minimum confidence 0.1, at least one item, and at most 10 items. There are **435** rules generated. 
+
+```{r}
+cart = apriori(groctrans, parameter=list(support=.01, confidence=.1, minlen=1, maxlen=10))
+```
+
+Focus on some meaningful association rules. I extract association rules with confidence being 0.02 or higher. There are 232 rules with the condition.  
+Plot 50 association rules with highest lift valuses. 
+One of strong red associations is from 'citrus fruit' to 'root vegetables'.  
+
+```{r}
+sub1 = subset(cart, subset = confidence > 0.2)
+plot(head(sub1, 50, by='lift'), method='graph')
+```
+
+Here are 5 rules with the highest lift value.  
+People who buy 'citrus fruit' and 'other vegetables' tend to buy 'root vegetables'. They might be people who love fruits and vegetables.   
+People who buy 'beef' tend to buy 'root vegetables'. They might want to make garnish with root vegetables for their steak.
+
+```{r}
+inspect(sort(sub1, by = "lift")[1:5]) 
+```
+
+People mostly buy 'whole milk'.
+Let's see what people who buy 'whole milk' tend to buy.  
+We can see people who buy 'curd' and 'whole milk' tend to buy 'yogurt', too. They might be dairy products loves.
+
+```{r}
+submilk = subset(sub1, lhs %in% 'whole milk')
+inspect(sort(submilk, by = "lift")[1:5])
+```
+
